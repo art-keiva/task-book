@@ -1,0 +1,250 @@
+{% extends 'base.html.twig' %}
+
+
+{% block body %}
+	
+  <div class="row">
+    <div class="col-12 text-center">
+      <h1 class="h3">
+        Список задач
+      </h1>
+    </div>
+  </div>
+  <hr>
+	<div class="row">
+    <div class="col-12 mb-4">
+      <table class="table table-bordered">
+        <thead>
+          <tr class=" text-center">
+            {% set path = '?' %}
+            {% if request.query.get('page') %}
+              {% set path = path ~ 'page=' ~ request.query.get('page') ~ '&' %}
+            {% endif %}
+
+            {% for item in sorts %}
+              <td width="{{ item.width }}">
+
+                {% if item.orderBy or sort %}
+
+                  <a href="/{{ path }}orderby={{ item.orderBy }}&sort={{ item.sort }}" class="d-block">
+                    {{ item.title }}
+                    <span class="sort-icon float-right">
+                      {% set class = 'down' %}
+                      {% if item.sort == 'asc' %}
+                        {% set class = 'up' %}
+                      {% endif %}
+                      <i class="fa fa-arrow-{{ class }}"></i>
+                    </span>
+                  </a>
+
+                {% else %}
+
+                  {{ item.title }}
+
+                {% endif %}
+
+              </td>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbdoy>
+          {% if paginator.numResults %}
+            {% for item in paginator.results %}
+            <tr>
+              <td>{{ item.fullname }}</td>
+              <td>{{ item.email }}</td>
+              <td>
+                <div class="row">
+                  {% set class = 'col-12' %}
+                  {% if session.get('auth') %}
+                    {% set class = 'col-11' %}
+                  {% endif %}
+                  <div class="{{ class }}">
+                    <div class="description">{{ item.description }}</div>
+                    {% if session.get('auth') %}
+                    <div class="edit-description d-none">
+                      <textarea data-item="{{ item.id }}" class="form-control">{{ item.description }}</textarea>
+                    </div>
+                    {% endif %}
+                  </div>
+                  {% if session.get('auth') %}
+                  <div class="col-1">
+                    <div class="edit-actions float-right">
+                      <a href="#" class="edit-cancel d-none" title="Отменить">
+                        <i class="fa fa-close"></i>
+                      </a>
+                      <a href="#" class="edit-save text-success d-none" title="Сохранить">
+                        <i class="fa fa-save"></i>
+                      </a>
+                      <a href="#" class="edit-edit" title="Отредактировать">
+                        <i class="fa fa-pen-alt"></i>
+                      </a>
+                    </div>
+                  </div>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                {% if session.get('auth') %}
+                  <div class="custom-control custom-checkbox mr-sm-2">
+                    <input type="checkbox" class="custom-control-input" id="comleted{{ loop.index }}" data-item="{{ item.id }}" {% if item.completed %}checked{% endif %}>
+                    <label class="custom-control-label" for="comleted{{ loop.index }}">Выполнено</label>
+                  </div>
+                  {% if item.edited %}<div class="text-warning small h6">Отредактировано администратором</div>{% endif %}
+                {% else %}
+                  {% if item.completed %}<div class="text-success">Выполнено</div>{% endif %}
+                  {% if item.edited %}<div class="text-warning small h6">Отредактировано администратором</div>{% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="{{ sorts|length }}" class="text-center">Список пуст</td>
+            </tr>
+          {% endif %}
+        </tbdoy>
+      </table>
+  	</div>
+  </div>
+
+  {% if paginator.hasToPaginate %}
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+      <nav aria-label="Page navigation example">
+        {% set path = '' %}
+        {% if request.query.get('orderby') %}
+          {% set path = path ~ '&orderby=' ~ request.query.get('orderby') %}
+        {% endif %}
+        {% if request.query.get('sort') %}
+          {% set path = path ~ '&sort=' ~ request.query.get('sort') %}
+        {% endif %}
+        
+        <ul class="pagination">
+          {% if paginator.hasPreviousPage %}
+          <li class="page-item prev"><a href="{{ '?page=' ~ paginator.previousPage ~ path }}" class="page-link" rel="previous"><i class="fa fw fa-arrow-left"></i> Назад</a></li>
+          {% else %}
+          <li class="page-item prev disabled"><span class="page-link"><i class="fa fw fa-arrow-left"></i> Назад</span></li>
+          {% endif %}
+
+          {% for i in 1..paginator.lastPage %}
+            {% if i == paginator.currentPage %}
+            <li class="page-item active"><span class="page-link">{{ i }} <span class="sr-only">(current)</span></span></li>
+            {% else %}
+            <li class="page-item"><a href="{{ '?page=' ~ i ~ path }}" class="page-link">{{ i }}</a></li>
+            {% endif %}
+          {% endfor %}
+
+          {% if paginator.hasNextPage %}
+          <li class="page-item next"><a href="?page={{ paginator.nextPage ~ path }}" class="page-link" rel="next">Далее <i class="fa fw fa-arrow-right"></i></a></li>
+          {% else %}
+          <li class="page-item next disabled"><span class="page-link">Далее <i class="fa fw fa-arrow-right"></i></span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card" id="createTask">
+        <div class="card-header">
+          Создать задачу
+        </div>
+        <div class="card-body">
+
+          {% if flashes.success %}
+          <div class="alert alert-success" role="alert">
+              {{ flashes.success }}
+          </div>
+          {% endif %}
+
+          {{ form_start(form) }}
+            {{ form_widget(form) }}
+          {{ form_end(form) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ parent() }}
+  <script type="text/javascript">
+    $(function(){
+      
+      $('table').delegate('.custom-control-input', 'change', function(e) {
+        // console.log(this.checked);
+        const item = $(this).data('item');
+        const checked = this.checked;
+
+        $.ajax({
+          method: "POST",
+          url: "/status",
+          data: { item: item, checked: checked }
+        })
+        .done(function( msg ) {
+          // console.log(msg.status);
+          if (!msg.status) {
+            alert('Для редактирования задачи требуется авторизация.');
+          }
+        });
+      });
+
+      const hide = 'd-none';
+
+      $('.edit-edit').on('click', function(e) {
+        e.preventDefault();
+        var parentEl = $(this).closest('.row');
+        $(this).addClass(hide);
+        $(parentEl).find('.description').addClass(hide);
+        $(parentEl).find('.edit-save,.edit-cancel').removeClass(hide);
+        $(parentEl).find('.edit-description').removeClass(hide);
+
+      });
+
+      $('.edit-cancel').on('click', function(e) {
+        e.preventDefault();
+        var parentEl = $(this).closest('.row');
+        $(this).addClass(hide);
+        $(parentEl).find('.edit-save,.edit-description').addClass(hide);
+        $(parentEl).find('.edit-edit,.description').removeClass(hide);
+        $(parentEl).find('.edit-description textarea').val($(parentEl).find('.description').text());
+      });
+
+      $('.edit-save').on('click', function(e) {
+        e.preventDefault();
+        var parentEl = $(this).closest('.row');
+        var text = $(parentEl).find('.description')
+        var textarea = $(parentEl).find('.edit-description textarea')
+        var item = $(textarea).data('item');
+        var description = $(textarea).val();
+
+        $.ajax({
+          method: "POST",
+          url: "/edit",
+          data: { item: item, description: description }
+        })
+        .done(function( msg ) {
+          // console.log(msg.status);
+          if (!msg.status) {
+            alert('Для редактирования задачи требуется авторизация.');
+          }
+
+          if (msg.edited) {
+            $(text).text(description);
+          }
+
+          $(parentEl).find('.edit-description').addClass(hide);
+          $(text).removeClass(hide);
+          $(parentEl).find('.edit-save,.edit-cancel').addClass(hide);
+          $(parentEl).find('.edit-edit').removeClass(hide);
+        });
+      });
+
+    });
+
+  </script>
+{% endblock %}

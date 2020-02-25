@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+
+{% block body %}
+	
+  <div class="row">
+    <div class="col-12 text-center">
+      <h1 class="h3">
+        Авторизация
+      </h1>
+    </div>
+  </div>
+  <hr>
+  <div class="row justify-content-center">
+    <div class="col-6 mb-4">
+      <div class="card" id="createTask">
+        <div class="card-header text-center">
+          Авторизация пользователя
+        </div>
+        <div class="card-body">
+
+          {% if flashes.danger %}
+          <div class="alert alert-danger" role="alert">
+              {{ flashes.danger }}
+          </div>
+          {% endif %}
+
+          {% if session.get('auth') is null %}
+            {{ form_start(form) }}
+              {{ form_widget(form) }}
+            {{ form_end(form) }}
+          {% else %}
+            <div class="text-center">
+              <p>вы вошли как <span class="badge badge-light"> {{ session.get('auth').username }} </span></p>
+              <a href="/logout" class="btn btn-danger">Выйти</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
